@@ -1,0 +1,3 @@
+project_id = "warm-letter"
+[functions.warm-letter]
+verify_jwt = false
