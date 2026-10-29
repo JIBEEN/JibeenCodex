@@ -25,11 +25,12 @@ npx supabase link --project-ref YOUR_PROJECT_REF
 
 3. Supabase Dashboard → Edge Functions → Secrets에 아래 항목을 설정합니다. 비밀값은 충분히 긴 무작위 값(32바이트 이상)으로 생성하고 서로 다르게 사용하세요. 채팅이나 Git에 기록하지 마세요.
 
-| 서버 비밀값 | 값 |
-| --- | --- |
-| `LETTER_PASSWORD_PEPPER` | 비밀번호 해시에 추가할 무작위 비밀값 |
-| `LETTER_AUTH_SECRET` | 편지별 5분 권한 서명과 요청 제한에 사용하는 별도 비밀값 |
-| `ALLOWED_ORIGIN` | `https://계정명.github.io` (경로와 마지막 `/` 제외) |
+| 서버 비밀값              | 값                                                           |
+| ------------------------ | ------------------------------------------------------------ |
+| `LETTER_PASSWORD_PEPPER` | 비밀번호 해시에 추가할 무작위 비밀값                         |
+| `LETTER_AUTH_SECRET`     | 편지별 5분 권한 서명과 요청 제한에 사용하는 별도 비밀값      |
+| `TEAM_INVITE_CODE_HASH`  | 팀 공용 초대 코드의 SHA-256 해시(원문은 Git에 저장하지 않음) |
+| `ALLOWED_ORIGIN`         | `https://계정명.github.io` (경로와 마지막 `/` 제외)          |
 
 `SUPABASE_URL`과 `SUPABASE_SERVICE_ROLE_KEY`는 Supabase 함수 런타임의 기본 제공 환경변수를 사용합니다. 서비스 역할 키는 프론트엔드에 넣지 않습니다.
 
@@ -39,7 +40,7 @@ npx supabase link --project-ref YOUR_PROJECT_REF
 npx supabase functions deploy warm-letter --no-verify-jwt
 ```
 
-익명 이용 서비스이므로 플랫폼 JWT 게이트는 끄고, 서버의 편지별 비밀번호 인증·권한 검증·요청 제한을 적용합니다. CORS는 `ALLOWED_ORIGIN` 한 개만 허용합니다. CORS 자체는 사용자 인증이 아닙니다.
+플랫폼 JWT 게이트는 끄고, 팀 공용 초대 코드와 서버의 편지별 비밀번호 인증·권한 검증·요청 제한을 적용합니다. CORS는 `ALLOWED_ORIGIN` 한 개만 허용합니다. CORS 자체는 사용자 인증이 아닙니다.
 
 5. 로컬 연결 시 `.env.example`을 `.env.local`로 복사해 공개 URL과 anon/publishable key를 입력합니다. 이 키는 DB 직접 접근 권한이 없습니다. 로컬 시험에서는 서버 `ALLOWED_ORIGIN`을 로컬 URL에 맞춰야 하므로 운영 프로젝트와 시험 프로젝트를 분리하는 것을 권장합니다.
 
@@ -48,11 +49,11 @@ npx supabase functions deploy warm-letter --no-verify-jwt
 1. GitHub 저장소 **Settings → Pages → Build and deployment → Source → GitHub Actions**를 선택합니다.
 2. **Settings → Secrets and variables → Actions → Variables**에 아래 공개 빌드 변수를 등록합니다.
 
-| 변수 | 예시 |
-| --- | --- |
-| `NEXT_PUBLIC_BASE_PATH` | 프로젝트 저장소면 `/goodbye-wonju`, `계정명.github.io` 저장소나 전용 도메인이면 `/` |
-| `NEXT_PUBLIC_SUPABASE_URL` | `https://프로젝트.supabase.co` |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon 또는 publishable key |
+| 변수                            | 예시                                                                                |
+| ------------------------------- | ----------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_BASE_PATH`         | 프로젝트 저장소면 `/goodbye-wonju`, `계정명.github.io` 저장소나 전용 도메인이면 `/` |
+| `NEXT_PUBLIC_SUPABASE_URL`      | `https://프로젝트.supabase.co`                                                      |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon 또는 publishable key                                                  |
 
 경로 변수는 생략 시 GitHub Actions에서 저장소명을 기준으로 자동 설정됩니다. 전용 도메인 사용 시 `/`로 지정하세요.
 
@@ -76,6 +77,7 @@ NEXT_PUBLIC_BASE_PATH=/goodbye-wonju npm run build
 - 숫자 4자리 비밀번호, PBKDF2-HMAC-SHA256 600,000회 + 개별 salt + 서버 pepper
 - 검증 성공 시 편지 ID·작업·버전이 제한된 5분 JWT 발급
 - 수정·삭제 시 서버 JWT 확인과 낙관적 동시성 검사
+- 모든 읽기·쓰기 요청에 팀 공용 초대 코드 SHA-256 검증
 - DB 공유 요청 제한: 인증 분당 5회, 쓰기 분당 20회(IP 기반)
 - DB 전 테이블 RLS, 공개 역할 직접 접근 금지, Storage 비공개 + 1시간 서명 URL
 - 본문은 React 텍스트로 렌더링하여 HTML 실행 차단

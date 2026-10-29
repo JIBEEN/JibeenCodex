@@ -23,6 +23,7 @@ import {
   deleteLetter,
   getState,
   saveLetter,
+  setTeamCode,
   uploadPhoto,
 } from "@/lib/client";
 type Panel = "write" | "read" | "auth" | "delete" | null;
@@ -54,6 +55,8 @@ export default function LetterApp({ mode }: { mode: "edit" | "view" }) {
   const [tour, setTour] = useState(false);
   const [fromEditor, setFromEditor] = useState(false);
   const [share, setShare] = useState(false);
+  const [inviteCode, setInviteCode] = useState("");
+  const [inviteReady, setInviteReady] = useState(!connected);
   const closeRef = useRef<HTMLButtonElement>(null);
   const lastFocus = useRef<HTMLElement | null>(null);
   const modalRef = useRef<HTMLElement>(null);
@@ -67,14 +70,51 @@ export default function LetterApp({ mode }: { mode: "edit" | "view" }) {
     setState(data);
   }
   useEffect(() => {
-    refresh()
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
     setFromEditor(sessionStorage.getItem("warm-preview") === "yes");
+    const savedCode = sessionStorage.getItem("warm-team-code") || "";
+    if (!connected) {
+      refresh()
+        .catch((e) => setError(e.message))
+        .finally(() => setLoading(false));
+    } else if (savedCode) {
+      setTeamCode(savedCode);
+      refresh()
+        .then(() => setInviteReady(true))
+        .catch((e) => {
+          sessionStorage.removeItem("warm-team-code");
+          setTeamCode("");
+          setError(e.message);
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
     const listener = () => refresh().catch(() => {});
     window.addEventListener("storage", listener);
     return () => window.removeEventListener("storage", listener);
   }, []);
+  async function unlock(e: React.FormEvent) {
+    e.preventDefault();
+    const value = inviteCode.trim();
+    if (!value) {
+      setError("팀 공용 초대 코드를 입력해 주세요.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    setTeamCode(value);
+    try {
+      await refresh();
+      sessionStorage.setItem("warm-team-code", value);
+      setInviteReady(true);
+      setInviteCode("");
+    } catch (e) {
+      setTeamCode("");
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(""), 3500);
@@ -266,6 +306,46 @@ export default function LetterApp({ mode }: { mode: "edit" | "view" }) {
   const written = state.letters.length;
   const shareUrl = () =>
     `${location.origin}${process.env.NEXT_PUBLIC_BASE_PATH || ""}/view/`;
+  if (connected && !inviteReady) {
+    return (
+      <main className="invite-gate">
+        <form className="invite-card" onSubmit={unlock}>
+          <span className="invite-icon">
+            <LockKeyhole size={28} strokeWidth={1.4} />
+          </span>
+          <p className="tiny-label">FOR OUR TEAM ONLY</p>
+          <h1>원주팀장님, 수고하셨습니다</h1>
+          <p>
+            팀원들에게 전달된 공용 초대 코드를 입력하면
+            <br />
+            마음을 담은 우편함이 열려요.
+          </p>
+          <label className="sr-only" htmlFor="team-code">
+            팀 공용 초대 코드
+          </label>
+          <input
+            id="team-code"
+            type="password"
+            autoComplete="off"
+            placeholder="팀 공용 초대 코드"
+            value={inviteCode}
+            onChange={(e) => setInviteCode(e.target.value)}
+            disabled={busy || loading}
+            autoFocus
+          />
+          {error && (
+            <p className="error" role="alert">
+              {error}
+            </p>
+          )}
+          <button className="button primary" disabled={busy || loading}>
+            {busy || loading ? "초대 코드를 확인하고 있어요…" : "우편함 열기"}
+            <ChevronRight size={17} />
+          </button>
+        </form>
+      </main>
+    );
+  }
   return (
     <div className="app-shell">
       <header className="topbar">
@@ -308,9 +388,9 @@ export default function LetterApp({ mode }: { mode: "edit" | "view" }) {
             <span /> OUR LITTLE POST OFFICE <span />
           </div>
           <h1>
-            팀장님께 전하는{" "}
+            원주팀장님,{" "}
             <span>
-              마음
+              수고하셨습니다
               <svg viewBox="0 0 130 13" aria-hidden="true">
                 <path d="M3 9 Q65 -2 127 7 M9 12 Q67 3 119 10" />
               </svg>
@@ -318,19 +398,8 @@ export default function LetterApp({ mode }: { mode: "edit" | "view" }) {
             <Heart className="title-heart" size={20} />
           </h1>
           <p>
-            {edit ? (
-              <>
-                함께한 시간은 추억이 되고,
-                <br className="mobile-break" /> 전하지 못한 마음은 편지가
-                됩니다.
-              </>
-            ) : (
-              <>
-                함께 웃었던 날들, 그리고 고마웠던 순간들.
-                <br />
-                다섯 사람의 마음을 여기에 담았어요.
-              </>
-            )}
+            짧지만 길었던 시간들을 저희와 함께 버텨주셔서
+            <br className="mobile-break" /> 감사합니다
           </p>
         </section>
         {loading ? (
@@ -465,7 +534,7 @@ export default function LetterApp({ mode }: { mode: "edit" | "view" }) {
                 )}
               </div>
               <div className="photo-caption">
-                <span>함께여서 참 좋은 날들</span>
+                <span>~2026.10.30</span>
                 <Heart size={14} strokeWidth={1.3} />
               </div>
             </section>
@@ -654,6 +723,7 @@ export default function LetterApp({ mode }: { mode: "edit" | "view" }) {
                 <h2 id="dialog-title">마음을 전할 준비가 됐어요</h2>
                 <p className="dialog-sub">
                   이 링크에서는 편지를 읽기만 할 수 있어요.
+                  <br />팀 공용 초대 코드도 함께 전달해 주세요.
                 </p>
                 {!connected ? (
                   <p className="error">
@@ -812,7 +882,7 @@ export default function LetterApp({ mode }: { mode: "edit" | "view" }) {
                   <Heart size={16} />
                 </button>
                 <p className="form-note">
-                  편지는 링크를 아는 누구나 읽을 수 있어요.
+                  편지는 링크와 팀 공용 초대 코드를 아는 사람만 읽을 수 있어요.
                 </p>
               </form>
             ) : panel === "auth" ? (

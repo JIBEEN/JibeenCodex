@@ -3,6 +3,10 @@ const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 export const connected = !!(url && anon);
 const fixedBackground = `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/team-photo.jpg`;
+let teamCode = "";
+export function setTeamCode(value: string) {
+  teamCode = value.trim();
+}
 const key = "warm-letter-demo-v1";
 type LocalState = AppState & {
   secrets: Record<string, { salt: string; hash: string }>;
@@ -65,6 +69,7 @@ export async function api(
     method,
     headers: {
       apikey: anon!,
+      "x-team-code": teamCode,
       ...(body instanceof FormData
         ? {}
         : { "Content-Type": "application/json" }),

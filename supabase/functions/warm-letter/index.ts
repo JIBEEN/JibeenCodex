@@ -47,7 +47,7 @@ function equal(a: string, b: string) {
 }
 async function rate(req: Request, action: string, max = 20) {
   const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    req.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim() || "unknown";
   const secret = await crypto.subtle.importKey(
     "raw",
     tokenKey(),
@@ -64,6 +64,17 @@ async function rate(req: Request, action: string, max = 20) {
   });
   if (error) throw new AppError("잠시 후 다시 시도해 주세요.", 503);
   if (!data) throw new AppError("잠시 후 다시 시도해 주세요.", 429);
+}
+async function verifyTeamCode(req: Request) {
+  const supplied = req.headers.get("x-team-code") || "";
+  const expected = env("TEAM_INVITE_CODE_HASH").toLowerCase();
+  if (!/^[a-f0-9]{64}$/.test(expected) || supplied.length > 128)
+    throw new AppError("초대 코드를 확인해 주세요.", 401);
+  const actual = hex(
+    await crypto.subtle.digest("SHA-256", encoder.encode(supplied)),
+  );
+  if (!equal(actual, expected))
+    throw new AppError("초대 코드를 확인해 주세요.", 401);
 }
 async function permission(req: Request, id: string, action: string) {
   try {
@@ -99,7 +110,8 @@ Deno.serve(async (req: Request) => {
   }
   const cors = {
     "Access-Control-Allow-Origin": allowed,
-    "Access-Control-Allow-Headers": "apikey,content-type,x-letter-token",
+    "Access-Control-Allow-Headers":
+      "apikey,content-type,x-letter-token,x-team-code",
     "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
     Vary: "Origin",
     "Content-Type": "application/json",
@@ -112,6 +124,8 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS")
     return new Response(null, { status: 204, headers: cors });
   try {
+    await rate(req, "invite", 30);
+    await verifyTeamCode(req);
     const db = client();
     const route = new URL(req.url).searchParams.get("path");
     if (route === "state" && req.method === "GET") {

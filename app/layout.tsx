@@ -6,9 +6,9 @@ import "@fontsource/noto-sans-kr/400.css";
 import "@fontsource/noto-sans-kr/500.css";
 import "./globals.css";
 export const metadata: Metadata = {
-  title: "팀장님께 전하는 마음 · Warm Letter",
+  title: "원주팀장님, 수고하셨습니다 · Warm Letter",
   description:
-    "함께한 시간은 추억이 되고, 전하지 못한 마음은 편지가 됩니다. 다섯 사람의 마음을 모은 작은 우편함.",
+    "짧지만 길었던 시간들을 저희와 함께 버텨주셔서 감사합니다. 다섯 사람의 마음을 모은 작은 우편함.",
 };
 export const viewport: Viewport = {
   width: "device-width",

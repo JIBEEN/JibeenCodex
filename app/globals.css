@@ -653,13 +653,65 @@ main {
   top: calc(100% + 8px);
   left: -15%;
   width: 130%;
-  color: #5f604b;
-  text-shadow: 0 1px 5px #fff8;
+  color: #fff;
+  text-shadow:
+    0 1px 6px #000a,
+    0 0 2px #000;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   font-family: var(--hand);
   font-size: 20px;
+}
+.invite-gate {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    linear-gradient(#453a2c66, #453a2c99),
+    url("/goodbye-wonju/team-photo.jpg") center / cover;
+}
+.invite-card {
+  width: min(100%, 410px);
+  padding: 38px 28px 30px;
+  border: 1px solid #fff8;
+  border-radius: 8px;
+  background: #fffaf0f2;
+  box-shadow: 0 20px 60px #271d1555;
+  text-align: center;
+}
+.invite-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 14px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #8c6f5e;
+  background: #eadac6;
+}
+.invite-card h1 {
+  margin: 8px 0 14px;
+  font-family: var(--serif);
+  font-size: clamp(26px, 7vw, 34px);
+  color: #55483b;
+}
+.invite-card > p:not(.tiny-label, .error) {
+  margin-bottom: 22px;
+  color: #786959;
+  font-size: 14px;
+  line-height: 1.8;
+}
+.invite-card input {
+  width: 100%;
+  margin-bottom: 14px;
+  text-align: center;
+  letter-spacing: 1.5px;
+}
+.invite-card .button {
+  width: 100%;
+  justify-content: center;
 }
 .progress-heading {
   display: flex;
