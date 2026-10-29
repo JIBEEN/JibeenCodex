@@ -50,7 +50,7 @@ npx supabase functions deploy warm-letter --no-verify-jwt
 
 | 변수 | 예시 |
 | --- | --- |
-| `NEXT_PUBLIC_BASE_PATH` | 프로젝트 저장소면 `/JibeenCodex`, `계정명.github.io` 저장소나 전용 도메인이면 `/` |
+| `NEXT_PUBLIC_BASE_PATH` | 프로젝트 저장소면 `/goodbye-wonju`, `계정명.github.io` 저장소나 전용 도메인이면 `/` |
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://프로젝트.supabase.co` |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon 또는 publishable key |
 
@@ -64,7 +64,7 @@ Supabase 두 변수를 생략하면 **기기 내 체험 모드**로 배포됩니
 로컬에서 같은 경로를 검증할 때:
 
 ```bash
-NEXT_PUBLIC_BASE_PATH=/JibeenCodex npm run build
+NEXT_PUBLIC_BASE_PATH=/goodbye-wonju npm run build
 ```
 
 ## 기능 및 보호
@@ -76,7 +76,7 @@ NEXT_PUBLIC_BASE_PATH=/JibeenCodex npm run build
 - 숫자 4자리 비밀번호, PBKDF2-HMAC-SHA256 600,000회 + 개별 salt + 서버 pepper
 - 검증 성공 시 편지 ID·작업·버전이 제한된 5분 JWT 발급
 - 수정·삭제 시 서버 JWT 확인과 낙관적 동시성 검사
-- DB 공유 요청 제한: 인증 분당 5회, 쓰기 분당 20회, 업로드 분당 5회(IP 기반)
+- DB 공유 요청 제한: 인증 분당 5회, 쓰기 분당 20회(IP 기반)
 - DB 전 테이블 RLS, 공개 역할 직접 접근 금지, Storage 비공개 + 1시간 서명 URL
 - 본문은 React 텍스트로 렌더링하여 HTML 실행 차단
 - 모바일 전체화면 편지, 독립 본문 스크롤, 안전 영역, 포커스 순환, 동작 감소 설정

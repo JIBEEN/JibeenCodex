@@ -1,6 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { SignJWT, jwtVerify } from "npm:jose@6";
-import { Image } from "npm:imagescript@3.7.0";
 import { AppError, validateLetter, slotNumber } from "../_shared/validation.ts";
 const env = (name: string) => {
   const value = Deno.env.get(name);
@@ -116,100 +115,12 @@ Deno.serve(async (req: Request) => {
     const db = client();
     const route = new URL(req.url).searchParams.get("path");
     if (route === "state" && req.method === "GET") {
-      const [settings, letters] = await Promise.all([
-        db
-          .from("project_settings")
-          .select("background_path")
-          .eq("id", 1)
-          .single(),
-        db.from("letters").select(fields).order("slot_number"),
-      ]);
-      if (settings.error || letters.error) throw Error();
-      let background = null;
-      if (settings.data.background_path) {
-        const signed = await db.storage
-          .from("memories")
-          .createSignedUrl(settings.data.background_path, 3600);
-        if (signed.error) throw Error();
-        background = signed.data.signedUrl;
-      }
-      return response({ background, letters: letters.data, demo: false });
-    }
-    if (route === "background" && req.method === "POST") {
-      await rate(req, "upload", 5);
-      if (Number(req.headers.get("content-length")) > 11 * 1024 * 1024)
-        throw new AppError("10MB 이하의 사진을 선택해 주세요.");
-      const form = await req.formData();
-      const file = form.get("photo");
-      if (!(file instanceof File) || !file.size || file.size > 10 * 1024 * 1024)
-        throw new AppError("10MB 이하의 사진을 선택해 주세요.");
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      const jpeg = bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255;
-      const png =
-        bytes[0] === 137 &&
-        bytes[1] === 80 &&
-        bytes[2] === 78 &&
-        bytes[3] === 71;
-      const webp =
-        String.fromCharCode(...bytes.slice(0, 4)) === "RIFF" &&
-        String.fromCharCode(...bytes.slice(8, 12)) === "WEBP";
-      if (!jpeg && !png && !webp)
-        throw new AppError("JPG, PNG, WebP 사진만 등록할 수 있어요.");
-      let image;
-      try {
-        image = await Image.decode(bytes);
-      } catch {
-        throw new AppError("사진을 읽을 수 없어요. 다른 사진을 선택해 주세요.");
-      }
-      if (image.width * image.height > 24000000)
-        throw new AppError(
-          "사진 해상도가 너무 커요. 작은 사진으로 다시 시도해 주세요.",
-        );
-      if (image.width > 1600 || image.height > 2200) {
-        const ratio = Math.min(1600 / image.width, 2200 / image.height);
-        image.resize(
-          Math.round(image.width * ratio),
-          Math.round(image.height * ratio),
-        );
-      }
-      const optimized = await image.encodeJPEG(85);
-      const reservation = crypto.randomUUID();
-      const path = `background/${reservation}.jpg`;
-      const reserved = await db.rpc("reserve_background", {
-        p_token: reservation,
-      });
-      if (reserved.error) throw Error();
-      if (!reserved.data)
-        throw new AppError("사진이 이미 등록되었거나 등록 중이에요.", 409);
-      let uploaded = false;
-      try {
-        const upload = await db.storage
-          .from("memories")
-          .upload(path, optimized, {
-            contentType: "image/jpeg",
-            upsert: false,
-          });
-        if (upload.error) throw Error();
-        uploaded = true;
-        const final = await db.rpc("finish_background", {
-          p_token: reservation,
-          p_path: path,
-        });
-        if (final.error || !final.data) throw Error();
-        return response({ ok: true });
-      } catch (error) {
-        const current = await db
-          .from("project_settings")
-          .select("background_path")
-          .eq("id", 1)
-          .single();
-        if (current.data?.background_path === path)
-          return response({ ok: true });
-        if (uploaded && current.data)
-          await db.storage.from("memories").remove([path]);
-        await db.rpc("release_background", { p_token: reservation });
-        throw error;
-      }
+      const letters = await db
+        .from("letters")
+        .select(fields)
+        .order("slot_number");
+      if (letters.error) throw Error();
+      return response({ background: null, letters: letters.data, demo: false });
     }
     if (route === "auth" && req.method === "POST") {
       await rate(req, "auth", 5);
