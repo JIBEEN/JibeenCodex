@@ -355,7 +355,7 @@ export default function LetterApp({ mode }: { mode: "edit" | "view" }) {
             <Heart size={8} fill="currentColor" />
           </span>
           <span>
-            마음을 담아<span className="brand-sub">WARM LETTER</span>
+            SF AX팀<span className="brand-sub">Farewell letter</span>
           </span>
         </Link>
         <div className="top-actions">
@@ -378,7 +378,7 @@ export default function LetterApp({ mode }: { mode: "edit" | "view" }) {
               편집으로 돌아가기
             </Link>
           ) : (
-            <span className="gift-label">FOR YOU, WITH LOVE</span>
+            <span className="gift-label">FOR WONJU, WITH LOVE</span>
           )}
         </div>
       </header>
