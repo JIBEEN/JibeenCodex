@@ -2,19 +2,21 @@ import { AppError, AppState, Letter, validateLetter } from "./validation";
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 export const connected = !!(url && anon);
+const fixedBackground = `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/team-photo.jpg`;
 const key = "warm-letter-demo-v1";
 type LocalState = AppState & {
   secrets: Record<string, { salt: string; hash: string }>;
 };
 const empty = (): LocalState => ({
-  background: null,
+  background: fixedBackground,
   letters: [],
   demo: true,
   secrets: {},
 });
 function local(): LocalState {
   try {
-    return JSON.parse(localStorage.getItem(key) || "null") || empty();
+    const state = JSON.parse(localStorage.getItem(key) || "null");
+    return state ? { ...state, background: fixedBackground } : empty();
   } catch {
     return empty();
   }
@@ -84,7 +86,9 @@ export async function api(
   return result;
 }
 export async function getState(): Promise<AppState> {
-  return connected ? api("state") : local();
+  if (!connected) return local();
+  const state = await api("state");
+  return { ...state, background: fixedBackground };
 }
 export async function uploadPhoto(file: File, dataUrl: string) {
   if (connected) {

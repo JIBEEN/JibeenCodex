@@ -252,14 +252,6 @@ Deno.serve(async (req: Request) => {
       if (req.method === "POST") {
         const value = validateLetter(body);
         const slot = slotNumber(body.slot_number);
-        const settings = await db
-          .from("project_settings")
-          .select("background_path")
-          .eq("id", 1)
-          .single();
-        if (settings.error) throw Error();
-        if (!settings.data.background_path)
-          throw new AppError("먼저 추억 사진을 등록해 주세요.");
         const salt = crypto.randomUUID();
         const password_hash = `pbkdf2-sha256-600000$${salt}$${await hash(body.password, salt)}`;
         const { data, error } = await db

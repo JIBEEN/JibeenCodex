@@ -1,6 +1,6 @@
 # 팀장님께 전하는 마음
 
-모바일 롤링페이퍼. Next.js + TypeScript 정적 내보내기, GitHub Pages, Supabase Database / Storage / Edge Functions.
+고정된 팀 사진 위에 다섯 통의 편지를 남기는 모바일 롤링페이퍼. Next.js + TypeScript 정적 내보내기, GitHub Pages, Supabase Database / Edge Functions.
 
 ## 실행
 
@@ -70,8 +70,7 @@ NEXT_PUBLIC_BASE_PATH=/JibeenCodex npm run build
 ## 기능 및 보호
 
 - 고정된 자연스러운 위치의 봉투 정확히 5개, 봉투 opacity 0.6, 별도 불투명 하트
-- 최초 사진 1회: JPG/PNG/WebP, 10MB, 서버 실제 디코딩 후 JPEG 최적화
-- 사진 등록은 DB 원자적 예약, 5분 만료 및 실패 복구로 동시 등록 방지
+- `public/team-photo.jpg`를 배경 사진으로 고정하여 모든 기기에서 동일한 사진 표시
 - 닉네임 1~20자 / 내용 1~2000자, 앞뒤 공백 제거, 한글·조합 이모지 grapheme 단위 검사
 - UNIQUE 슬롯으로 선착순 저장, 충돌 시 입력값 보존
 - 숫자 4자리 비밀번호, PBKDF2-HMAC-SHA256 600,000회 + 개별 salt + 서버 pepper
@@ -82,7 +81,7 @@ NEXT_PUBLIC_BASE_PATH=/JibeenCodex npm run build
 - 본문은 React 텍스트로 렌더링하여 HTML 실행 차단
 - 모바일 전체화면 편지, 독립 본문 스크롤, 안전 영역, 포커스 순환, 동작 감소 설정
 
-4자리 비밀번호는 내용 비공개용이 아니라 편집 제어용입니다. 편지는 링크를 아는 누구나 읽을 수 있습니다. 사진을 먼저 등록한 후 작성 링크를 팀원들에게 공유하세요.
+4자리 비밀번호는 내용 비공개용이 아니라 편집 제어용입니다. 편지는 링크를 아는 누구나 읽을 수 있습니다. 작성 링크를 팀원들에게 공유하세요.
 
 ## 검증
 
